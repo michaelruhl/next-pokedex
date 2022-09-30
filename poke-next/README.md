@@ -1,3 +1,10 @@
+## next.js PokeDex!!!!
+
+Type in a pokemon to get a general idea about them!
+
+Display Stats, Abilities, Moves, and more!
+
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
