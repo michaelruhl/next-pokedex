@@ -2,7 +2,6 @@ import Head from "next/head";
 import axios from "axios";
 import { useState, React } from "react";
 
-
 const poke = axios.create({
   baseURL: "https://pokeapi.co/",
   timeout: 1000,
@@ -21,7 +20,6 @@ export default function Home() {
   const [skill4, setSkill4] = useState("");
   const [skill5, setSkill5] = useState("");
   const [skill6, setSkill6] = useState("");
-  // const [types, setTypes] = useState("");
   const [DDF, setDDF] = useState("");
   const [DDF2, setDDF2] = useState("");
   const [DDF3, setDDF3] = useState("");
@@ -32,7 +30,6 @@ export default function Home() {
   const [moveState2, setmoveState2] = useState("");
   const [moveState3, setmoveState3] = useState("");
   const [moveState4, setmoveState4] = useState("");
-
 
   let pokeID;
   let abilityURL;
@@ -85,7 +82,10 @@ export default function Home() {
         setSkill5({ width: `${skillArray[4]}%` });
         setSkill6({ width: `${skillArray[5]}%` });
 
-        return skillArray;
+        
+
+        
+        
       };
 
       returnStatArray();
@@ -94,31 +94,52 @@ export default function Home() {
 
   // API call for GETing pokemon description
   const pokeDescription = (pokeID) => {
-    poke.get(`api/v2/pokemon-species/${pokeID}`).then((res) => {
+    poke.get(`api/v2/pokemon-species/${pokeID}/`).then((res) => {
       const data = res.data;
-      setSpecies(data.flavor_text_entries[1].flavor_text.replace("\f", "\n"));
+      for (let desc of data.flavor_text_entries)  {
+        if (desc.language.name === "en") {
+
+          setSpecies(desc.flavor_text.replace("\f", "\n"));
+      }
+
+      }
     });
   };
 
   // API call for GETing ability description
   const pokeAbility = () => {
-    Promise.all([
-      poke.get(abilityURL[0].ability.url),
-      poke.get(abilityURL[1].ability.url),
-      // add GET for location found
-      poke.get(`api/v2/pokemon/${pokeID}/encounters`),
-      // GET for Types
-      poke.get(swURL[0].type.url),
-      // GET for moves
-      
-    ]).then((res) => {
-      const data = [res[0].data, res[1].data, res[2].data, res[3].data];
-      setAbilitiesDescription(data);
-      returnSW(data[3]);
-    });
-  };
+    if (abilityURL.length > 1 ) {
 
-  const returnSW = (e) => {
+      Promise.all([
+        poke.get(abilityURL[0].ability.url),
+        poke.get(abilityURL[1].ability.url),
+        // add GET for location found
+        poke.get(`api/v2/pokemon/${pokeID}/encounters`),
+        // GET for Types
+        poke.get(swURL[0].type.url),
+        // GET for moves
+      ]).then((res) => {
+        const data = [res[0].data, res[1].data, res[2].data, res[3].data];
+        setAbilitiesDescription(data);
+        returnSW(data[3]);
+      })
+    } else {
+      Promise.all([
+        poke.get(abilityURL[0].ability.url),
+        // add GET for location found
+        poke.get(`api/v2/pokemon/${pokeID}/encounters`),
+        // GET for Types
+        poke.get(swURL[0].type.url),
+        // GET for moves
+      ]).then((res) => {
+        const data = [res[0].data, res[1].data, res[2].data];
+        setAbilitiesDescription(data);
+        returnSW(data[2]);
+      })
+    }
+    
+  }
+    const returnSW = (e) => {
     for (let sw of e.damage_relations.double_damage_from) {
       if (sw.name) {
         dmg2Array.push(sw.name);
@@ -218,10 +239,28 @@ export default function Home() {
         movesArr8.push(m.move.name);
       }
     }
-    setmoveState(movesArr2.map((o) => <div> {o.charAt(0).toUpperCase() + o.slice(1)} </div>));
-    setmoveState2(movesArr4.map((o) => <div> {o.charAt(0).toUpperCase() + o.slice(1)} </div>));
-    setmoveState3(movesArr6.map((o) => <div> {o.charAt(0).toUpperCase() + o.slice(1)} </div>));
-    setmoveState4(movesArr8.map((o) => <div> {o.charAt(0).toUpperCase() + o.slice(1)} </div>));
+
+    
+    setmoveState(
+      movesArr2.map((o) => (
+        <div> {o.charAt(0).toUpperCase() + o.slice(1)} </div>
+      ))
+    );
+    setmoveState2(
+      movesArr4.map((o) => (
+        <div> {o.charAt(0).toUpperCase() + o.slice(1)} </div>
+      ))
+    );
+    setmoveState3(
+      movesArr6.map((o) => (
+        <div> {o.charAt(0).toUpperCase() + o.slice(1)} </div>
+      ))
+    );
+    setmoveState4(
+      movesArr8.map((o) => (
+        <div> {o.charAt(0).toUpperCase() + o.slice(1)} </div>
+      ))
+    );
 
     // console.log(movesArr2);
     // console.log(moveState);
@@ -246,29 +285,113 @@ export default function Home() {
                       <div className="card-header" style={{ fontSize: "36px" }}>
                         Moves
                       </div>
-                      <ul className="nav nav-tabs" style={{display: "flex", justifyContent: "center"}}id="myTab" role="tablist">
-  <li className="nav-item" role="presentation">
-    <button className="nav-link active" style={{color: "white"}} id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">1</button>
-  </li>
-  <li className="nav-item" role="presentation">
-    <button className="nav-link" style={{color: "white"}} id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">2</button>
-  </li>
-  <li className="nav-item" role="presentation">
-    <button className="nav-link" style={{color: "white"}} id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact-tab-pane" type="button" role="tab" aria-controls="contact-tab-pane" aria-selected="false">3</button>
-  </li>
-  <li className="nav-item" role="presentation">
-    <button className="nav-link" style={{color: "white"}} id="disabled-tab" data-bs-toggle="tab" data-bs-target="#disabled-tab-pane" type="button" role="tab" aria-controls="disabled-tab-pane" aria-selected="false">4</button>
-  </li>
-</ul>
-<div className="tab-content" id="myTabContent">
-  <div className="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabIndex="0"><div className="card-text">{moveState}</div></div>
-  <div className="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabIndex="0">{moveState2}</div>
-  <div className="tab-pane fade" id="contact-tab-pane" role="tabpanel" aria-labelledby="contact-tab" tabIndex="0">{moveState3}</div>
-  <div className="tab-pane fade" id="disabled-tab-pane" role="tabpanel" aria-labelledby="disabled-tab" tabIndex="0">{moveState4}</div>
-</div>
-                        
+                      <ul
+                        className="nav nav-tabs"
+                        style={{ display: "flex", justifyContent: "center" }}
+                        id="myTab"
+                        role="tablist"
+                      >
+                        <li className="nav-item" role="presentation">
+                          <button
+                            className="nav-link active"
+                            style={{ color: "white" }}
+                            id="home-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#home-tab-pane"
+                            type="button"
+                            role="tab"
+                            aria-controls="home-tab-pane"
+                            aria-selected="true"
+                          >
+                            1
+                          </button>
+                        </li>
+                        <li className="nav-item" role="presentation">
+                          <button
+                            className="nav-link"
+                            style={{ color: "white" }}
+                            id="profile-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#profile-tab-pane"
+                            type="button"
+                            role="tab"
+                            aria-controls="profile-tab-pane"
+                            aria-selected="false"
+                          >
+                            2
+                          </button>
+                        </li>
+                        <li className="nav-item" role="presentation">
+                          <button
+                            className="nav-link"
+                            style={{ color: "white" }}
+                            id="contact-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#contact-tab-pane"
+                            type="button"
+                            role="tab"
+                            aria-controls="contact-tab-pane"
+                            aria-selected="false"
+                          >
+                            3
+                          </button>
+                        </li>
+                        <li className="nav-item" role="presentation">
+                          <button
+                            className="nav-link"
+                            style={{ color: "white" }}
+                            id="disabled-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#disabled-tab-pane"
+                            type="button"
+                            role="tab"
+                            aria-controls="disabled-tab-pane"
+                            aria-selected="false"
+                          >
+                            4
+                          </button>
+                        </li>
+                      </ul>
+                      <div className="tab-content" id="myTabContent">
+                        <div
+                          className="tab-pane fade show active"
+                          id="home-tab-pane"
+                          role="tabpanel"
+                          aria-labelledby="home-tab"
+                          tabIndex="0"
+                        >
+                          <div className="card-text">{moveState}</div>
+                        </div>
+                        <div
+                          className="tab-pane fade"
+                          id="profile-tab-pane"
+                          role="tabpanel"
+                          aria-labelledby="profile-tab"
+                          tabIndex="0"
+                        >
+                          {moveState2}
+                        </div>
+                        <div
+                          className="tab-pane fade"
+                          id="contact-tab-pane"
+                          role="tabpanel"
+                          aria-labelledby="contact-tab"
+                          tabIndex="0"
+                        >
+                          {moveState3}
+                        </div>
+                        <div
+                          className="tab-pane fade"
+                          id="disabled-tab-pane"
+                          role="tabpanel"
+                          aria-labelledby="disabled-tab"
+                          tabIndex="0"
+                        >
+                          {moveState4}
+                        </div>
                       </div>
-                                        </div>
+                    </div>
+                  </div>
                 ) : (
                   <div></div>
                 )}
@@ -327,7 +450,10 @@ export default function Home() {
                             className="nav nav-tabs"
                             id="nav-tab"
                             role="tablist"
-                            style={{display: "flex", justifyContent: "center"}}
+                            style={{
+                              display: "flex",
+                              justifyContent: "center",
+                            }}
                           >
                             <button
                               className="nav-link active"
@@ -471,25 +597,26 @@ export default function Home() {
                           <div className="row row-cols-1 row-cols-md-2 g-4">
                             <div className="col">
                               <h5 className="card-title">Height</h5>
-                              <p className="card-text">{body.height}00cm</p>
+                              <p className="card-text">{body.height}0cm</p>
                             </div>
                             <div className="col">
                               <h5 className="title">Location Found</h5>
                               <p className="card-text">
-                                {abilitiesDesciption[2].length < 1
+                                {abilitiesDesciption.length < 4
                                   ? "Unknown"
                                   : abilitiesDesciption[2][0].location_area
-                                      .name}
+                                      .name.charAt(0).toUpperCase() + abilitiesDesciption[2][0].location_area
+                                      .name.slice(1)}
                               </p>
                             </div>
                             <div className="col">
                               <h5 className="card-title">Weight</h5>
-                              <p className="card-text">{body.weight}00g</p>
+                              <p className="card-text">{body.weight/10}kg</p>
                             </div>
                             <div className="col">
                               <h5 className="card-title">Type</h5>
                               <p className="card-text">
-                                {body.types[0].type.name}
+                                {body.types[0].type.name.charAt(0).toUpperCase() + body.types[0].type.name.slice(1)}
                               </p>
                             </div>
                           </div>
@@ -515,18 +642,19 @@ export default function Home() {
                                   .flavor_text
                               }
                             </p>
-                            <h5 className="card-title">
+                            {abilities.length > 1 ? <div><h5 className="card-title">
                               {abilities[1].ability.name
                                 .charAt(0)
                                 .toUpperCase() +
                                 abilities[1].ability.name.slice(1)}
                             </h5>
                             <p className="card-text">
-                              {
+                              {                                abilitiesDesciption.length < 4
+                                  ? "Unknown" :
                                 abilitiesDesciption[1].flavor_text_entries[0]
                                   .flavor_text
                               }
-                            </p>
+                            </p></div> : <div> </div>}
                           </div>
                         </div>
                       </div>
