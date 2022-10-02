@@ -30,6 +30,8 @@ export default function Home() {
   const [moveState2, setmoveState2] = useState("");
   const [moveState3, setmoveState3] = useState("");
   const [moveState4, setmoveState4] = useState("");
+  const [abilityBug, setAbilityBug] = useState("")
+  const [abilityBug2, setAbilityBug2] = useState("")
 
   let pokeID;
   let abilityURL;
@@ -82,10 +84,6 @@ export default function Home() {
         setSkill5({ width: `${skillArray[4]}%` });
         setSkill6({ width: `${skillArray[5]}%` });
 
-        
-
-        
-        
       };
 
       returnStatArray();
@@ -121,6 +119,16 @@ export default function Home() {
       ]).then((res) => {
         const data = [res[0].data, res[1].data, res[2].data, res[3].data];
         setAbilitiesDescription(data);
+        for (let desc of data[1].flavor_text_entries)  {
+          if (desc.language.name === "en") {
+  
+            setAbilityBug(desc.flavor_text);
+        }}
+        for (let desc of data[0].flavor_text_entries)  {
+          if (desc.language.name === "en") {
+  
+            setAbilityBug2(desc.flavor_text);
+        }}
         returnSW(data[3]);
       })
     } else {
@@ -134,6 +142,11 @@ export default function Home() {
       ]).then((res) => {
         const data = [res[0].data, res[1].data, res[2].data];
         setAbilitiesDescription(data);
+        for (let desc of data[0].flavor_text_entries)  {
+          if (desc.language.name === "en") {
+  
+            setAbilityBug(desc.flavor_text);
+        }}
         returnSW(data[2]);
       })
     }
@@ -218,11 +231,7 @@ export default function Home() {
     for (let m of movesArr) {
       if (m.move.name) {
         movesArr2.push(m.move.name);
-        // poke.get(`${m.move.url}`).then((res) => {
-        //   const data = res.data
-        //   console.logdata.contest_combos[0]
-        // })
-      }
+             }
     }
     for (let m of movesArr3) {
       if (m.move.name) {
@@ -261,10 +270,9 @@ export default function Home() {
         <div> {o.charAt(0).toUpperCase() + o.slice(1)} </div>
       ))
     );
+     };
+ 
 
-    // console.log(movesArr2);
-    // console.log(moveState);
-  };
 
   return (
     <div id="dexContainer" className="col bg-danger">
@@ -596,13 +604,13 @@ export default function Home() {
                           <h3>Profile</h3>
                           <div className="row row-cols-1 row-cols-md-2 g-4">
                             <div className="col">
-                              <h5 className="card-title">Height</h5>
+                              <h5 className="card-title">Height:</h5>
                               <p className="card-text">{body.height}0cm</p>
                             </div>
                             <div className="col">
-                              <h5 className="title">Location Found</h5>
+                              <h5 className="title">Location Found:</h5>
                               <p className="card-text">
-                                {abilitiesDesciption.length < 4
+                                {abilitiesDesciption.length < 4 || abilitiesDesciption[2].length < 1
                                   ? "Unknown"
                                   : abilitiesDesciption[2][0].location_area
                                       .name.charAt(0).toUpperCase() + abilitiesDesciption[2][0].location_area
@@ -610,11 +618,11 @@ export default function Home() {
                               </p>
                             </div>
                             <div className="col">
-                              <h5 className="card-title">Weight</h5>
+                              <h5 className="card-title">Weight:</h5>
                               <p className="card-text">{body.weight/10}kg</p>
                             </div>
                             <div className="col">
-                              <h5 className="card-title">Type</h5>
+                              <h5 className="card-title">Type:</h5>
                               <p className="card-text">
                                 {body.types[0].type.name.charAt(0).toUpperCase() + body.types[0].type.name.slice(1)}
                               </p>
@@ -638,8 +646,7 @@ export default function Home() {
                             </h5>
                             <p className="card-text">
                               {
-                                abilitiesDesciption[0].flavor_text_entries[0]
-                                  .flavor_text
+                                !abilities[1] ? abilityBug : abilityBug2
                               }
                             </p>
                             {abilities.length > 1 ? <div><h5 className="card-title">
@@ -651,8 +658,7 @@ export default function Home() {
                             <p className="card-text">
                               {                                abilitiesDesciption.length < 4
                                   ? "Unknown" :
-                                abilitiesDesciption[1].flavor_text_entries[0]
-                                  .flavor_text
+                                abilityBug
                               }
                             </p></div> : <div> </div>}
                           </div>
@@ -667,7 +673,7 @@ export default function Home() {
                         <div className="row row-cols-1 row-cols-md-2 g-8">
                           <div className="col">
                             <h5 className="card-title">Double Damage From:</h5>
-                            <div className="card-text">{DDF}</div>
+                            <div className="card-text">{DDF[<div>Ground</div>] ? DDF + "ground" : DDF}</div>
                           </div>
                           <div className="col">
                             <h5 className="card-title">Double Damage To:</h5>
