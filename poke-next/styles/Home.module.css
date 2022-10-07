@@ -112,6 +112,13 @@
   object-fit: contain;
 }
 
+.tooltip{
+  background-color: indianred;
+}
+.tooltip-hidden{
+  visibility: hidden;
+  pointer-events:none;
+}
 
 
 #picDescContainer{

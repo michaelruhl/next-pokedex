@@ -1,7 +1,14 @@
 import Head from "next/head";
+import Script from "next/script";
 import axios from "axios";
-import { useState, React } from "react";
-import Popper from "Popper"
+import { useState, React, useRef, useEffect } from "react";
+import { onlegend } from "../redux/legend";
+import { onPokemon } from "../redux/pokemon";
+import { evos, evos2 } from "../redux/evos";
+
+import { useSelector, useDispatch } from "react-redux";
+import { usePopper } from "react-popper";
+import classNames from "classnames";
 
 const poke = axios.create({
   baseURL: "https://pokeapi.co/",
@@ -9,7 +16,7 @@ const poke = axios.create({
 });
 
 export default function Home() {
-  const [pokemon, setPokemon] = useState("");
+  // const [pokemon, setPokemon] = useState("");
   const [pic, setPic] = useState("");
   const [abilities, setAbilities] = useState("");
   const [abilitiesDesciption, setAbilitiesDescription] = useState("");
@@ -33,6 +40,17 @@ export default function Home() {
   const [moveState4, setmoveState4] = useState("");
   const [abilityBug, setAbilityBug] = useState("");
   const [abilityBug2, setAbilityBug2] = useState("");
+  const { legend } = useSelector((state) => state.legend);
+  const { pokemon } = useSelector((state) => state.pokemon);
+  const { evos } = useSelector((state) => state.evos);
+  const { evos2 } = useSelector((state) => state.evos);
+  const [type, setType] = useState("") 
+ 
+
+  const dispatch = useDispatch();
+  const [evolve, setEvolve] = useState("");
+  const [evolve2, setEvolve2] = useState("");
+  const [urlLink, setUrl] = useState("");
 
   let pokeID;
   let abilityURL;
@@ -926,48 +944,87 @@ export default function Home() {
   let psychicType = ["psychic"];
   let waterType = ["water"];
 
+  const getEvos = () => {
+    dispatch({ type: "pokemon/onPokemon", payload: evos });
+    // runSearch()
+  };
+  // const runSearch = () => {
+  //   searchPokemon2(pokemon)
+
+  // }
+  const getEvos2 = () => {
+    dispatch({ type: "pokemon/onPokemon", payload: evos2 });
+    // runSearch2()
+  };
+  // const runSearch2 = () => {
+  //   searchPokemon2(pokemon)
+
+  // }
+
+  useEffect(() => {
+    const msg = new SpeechSynthesisUtterance()
+
+    const speechHandler = (msg) => {
+      console.log(species)
+      msg.text = pokemon + "," + 'a' + type + "pokemon," + species
+      window.speechSynthesis.speak(msg)
+    }
+    speechHandler(msg)
+  }, [species])
+
   const searchPokemon = async (e) => {
     e.preventDefault();
-    await poke.get(`api/v2/pokemon/${pokemon}`).then((res) => {
-      console.log(res.data);
-      const data = res.data;
-      pokeID = data.id;
-      abilityURL = data.abilities;
+    if (pokemon != "") {
+      await poke.get(`api/v2/pokemon/${pokemon}`).then((res) => {
+        console.log(res.data);
+        const data = res.data;
+        pokeID = data.id;
+        abilityURL = data.abilities;
 
-      swURL = data.types;
-      setPic(data.sprites.front_default);
-      setAbilities(data.abilities);
-      setBody(data);
-      // setTypes(data.types)
-      pokeDescription(pokeID);
-      pokeAbility();
-      returnMoves(data);
+        swURL = data.types;
+        setPic(data.sprites.front_default);
+        setAbilities(data.abilities);
+        setBody(data);
+        if (data.types.length > 1) {
+          setType(data.types[0].type.name + data.types[1].type.name)
+        } else {setType(data.types[0].type.name)}
+        // setTypes(data.types)
+        pokeDescription(pokeID);
+        
 
-      const statsList = data.stats;
-      const returnStatArray = () => {
-        let statArray = [];
-        let skillArray = [];
-        let largestStat;
+        
+        
+        pokeAbility();
+        returnMoves(data);
+        returnEvolution2(data);
 
-        for (let stat of statsList) {
-          statArray.push(stat.base_stat);
-        }
-        largestStat = Math.max(...statArray);
-        for (let skill of statArray) {
-          skillArray.push(Math.floor((skill / largestStat) * 100));
-        }
-        // setSkill1(skillArray)
+        const statsList = data.stats;
+        const returnStatArray = () => {
+          let statArray = [];
+          let skillArray = [];
+          let largestStat;
 
-        setSkill1({ width: `${skillArray[0]}%` });
-        setSkill2({ width: `${skillArray[1]}%` });
-        setSkill3({ width: `${skillArray[2]}%` });
-        setSkill4({ width: `${skillArray[3]}%` });
-        setSkill5({ width: `${skillArray[4]}%` });
-        setSkill6({ width: `${skillArray[5]}%` });
-      };
+          for (let stat of statsList) {
+            statArray.push(stat.base_stat);
+          }
+          largestStat = Math.max(...statArray);
+          for (let skill of statArray) {
+            skillArray.push(Math.floor((skill / largestStat) * 100));
+          }
+          // setSkill1(skillArray)
 
-      returnStatArray();
-    });
+          setSkill1({ width: `${skillArray[0]}%` });
+          setSkill2({ width: `${skillArray[1]}%` });
+          setSkill3({ width: `${skillArray[2]}%` });
+          setSkill4({ width: `${skillArray[3]}%` });
+          setSkill5({ width: `${skillArray[4]}%` });
+          setSkill6({ width: `${skillArray[5]}%` });
+        };
+
+        returnStatArray();
+      });
+      // dispatch({ type: "pokemon/onPokemon", payload: ''})
+    }
   };
 
   // API call for GETing pokemon description
@@ -1028,6 +1085,7 @@ export default function Home() {
       });
     }
   };
+
   const returnSW = (e) => {
     for (let sw of e.damage_relations.double_damage_from) {
       if (sw.name) {
@@ -2807,12 +2865,12 @@ export default function Home() {
       }
     }
 
-    setDDF(Arr5.map((type) => <div> {type} </div>));
-    setDDF2(Arr6.map((type) => <div> {type} </div>));
-    setDDF3(Arr7.map((type) => <div> {type} </div>));
-    setDDF4(Arr8.map((type) => <div> {type} </div>));
-    setDDF5(Arr9.map((type) => <div> {type} </div>));
-    setDDF6(Arr10.map((type) => <div> {type} </div>));
+    setDDF(Arr5.map((type, index) => <div key={index}> {type} </div>));
+    setDDF2(Arr6.map((type, index) => <div key={index}> {type} </div>));
+    setDDF3(Arr7.map((type, index) => <div key={index}> {type} </div>));
+    setDDF4(Arr8.map((type, index) => <div key={index}> {type} </div>));
+    setDDF5(Arr9.map((type, index) => <div key={index}> {type} </div>));
+    setDDF6(Arr10.map((type, index) => <div key={index}> {type} </div>));
   };
 
   const returnMoves = (e) => {
@@ -4004,7 +4062,9 @@ export default function Home() {
               borderStyle: "solid",
               borderRadius: "30%",
               textTransform: "capitalize",
-              dataContainer:"body", dataToggle:"popover", dataPlacement:"right"
+              dataContainer: "body",
+              dataToggle: "popover",
+              dataPlacement: "right",
             }}
           >
             {move}
@@ -4012,393 +4072,351 @@ export default function Home() {
         );
       }
     }
-    setmoveState(Arr1.map((o) => <div> {o} </div>));
-    setmoveState2(Arr2.map((o) => <div> {o} </div>));
-    setmoveState3(Arr3.map((o) => <div> {o} </div>));
-    setmoveState4(Arr4.map((o) => <div> {o} </div>));
+    setmoveState(Arr1.map((o, index) => <div key={index}> {o} </div>));
+    setmoveState2(Arr2.map((o, index) => <div key={index}> {o} </div>));
+    setmoveState3(Arr3.map((o, index) => <div key={index}> {o} </div>));
+    setmoveState4(Arr4.map((o, index) => <div key={index}> {o} </div>));
   };
 
-  // const typeGetter = () => {
-  //   Promise.all([
-  //     poke.get(`api/v2/type/normal`),
-  //     poke.get(`api/v2/type/bug`),
-  //     poke.get(`api/v2/type/electric`),
-  //     poke.get(`api/v2/type/fire`),
-  //     poke.get(`api/v2/type/rock`),
-  //     poke.get(`api/v2/type/grass`),
-  //     poke.get(`api/v2/type/dark`),
-  //     poke.get(`api/v2/type/fairy`),
-  //     poke.get(`api/v2/type/flying`),
-  //     poke.get(`api/v2/type/ground`),
-  //     poke.get(`api/v2/type/poison`),
-  //     poke.get(`api/v2/type/steel`),
-  //     poke.get(`api/v2/type/dragon`),
-  //     poke.get(`api/v2/type/fighting`),
-  //     poke.get(`api/v2/type/ghost`),
-  //     poke.get(`api/v2/type/ice`),
-  //     poke.get(`api/v2/type/psychic`),
-  //     poke.get(`api/v2/type/water`),
-  // ]).then((res) => {
-  //     const normal = res[0].data.moves
-  //     const bug = res[1].data.moves
-  //     const electric = res[2].data.moves
-  //     const fire = res[3].data.moves
-  //     const rock = res[4].data.moves
-  //     const grass = res[5].data.moves
-  //     const dark = res[6].data.moves
-  //     const fairy = res[7].data.moves
-  //     const flying = res[8].data.moves
-  //     const ground = res[9].data.moves
-  //     const poison = res[10].data.moves
-  //     const steel = res[11].data.moves
-  //     const dragon = res[12].data.moves
-  //     const fighting = res[13].data.moves
-  //     const ghost = res[14].data.moves
-  //     const ice = res.data.moves
-  //     const psychic = res[16].data.moves
-  //     const water = res[17].data.moves
+  const legendHide = () => {
+    dispatch(onlegend());
+  };
 
-  // for (let type of normal) {
-  //   if (type)  {
-  //     normalArr.push(type.name)
-  //   }
-  // }
-  // for (let type of bug) {
-  //   if (type)  {
-  //     bugArr.push(type.name)
-  //   }
-  // }
-  // for (let type of electric) {
-  //   if (type)  {
-  //     electricArr.push(type.name)
-  //   }
-  // }
-  // for (let type of fire) {
-  //   if (type)  {
-  //     fireArr.push(type.name)
-  //   }
-  // }
-  // for (let type of rock) {
-  //   if (type)  {
-  //     rockArr.push(type.name)
-  //   }
-  // }
-  // for (let type of grass) {
-  //   if (type)  {
-  //     grassArr.push(type.name)
-  //   }
-  // }
-  // for (let type of dark) {
-  //   if (type)  {
-  //     darkArr.push(type.name)
-  //   }
-  // }
-  // for (let type of fairy) {
-  //   if (type)  {
-  //     fairyArr.push(type.name)
-  //   }
-  // }
-  // for (let type of flying) {
-  //   if (type)  {
-  //     flyingArr.push(type.name)
-  //   }
-  // }
-  // for (let type of ground) {
-  //   if (type)  {
-  //     groundArr.push(type.name)
-  //   }
-  // }
-  // for (let type of poison) {
-  //   if (type)  {
-  //     poisonArr.push(type.name)
-  //   }
-  // }
-  // for (let type of steel) {
-  //   if (type)  {
-  //     steelArr.push(type.name)
-  //   }
-  // }
-  // for (let type of dragon) {
-  //   if (type)  {
-  //     dragonArr.push(type.name)
-  //   }
-  // }
-  // for (let type of fighting) {
-  //   if (type)  {
-  //     fightingArr.push(type.name)
-  //   }
-  // }
-  // for (let type of ghost) {
-  //   if (type)  {
-  //     ghostArr.push(type.name)
-  //   }
-  // }
-  // for (let type of ice) {
-  //   if (type)  {
-  //     iceArr.push(type.name)
-  //   }
-  // }
-  // for (let type of psychic) {
-  //   if (type)  {
-  //     psychicArr.push(type.name)
-  //   }
-  // }
-  // for (let type of water) {
-  //   if (type)  {
-  //     waterArr.push(type.name)
-  //   }
-  // }
+  const returnEvolution2 = (e) => {
+    poke.get(e.species.url).then((res) => {
+      const data = res.data;
+      setUrl(res.data);
+      returnEvolution(data);
+    });
+  };
 
-  // console.log(normalArr)
-  // console.log(bugArr)
-  // console.log(electricArr)
-  // console.log(fireArr)
-  // console.log(rockArr)
-  // console.log(grassArr)
-  // console.log(darkArr)
-  // console.log(fairyArr)
-  // console.log(flyingArr)
-  // console.log(groundArr)
-  // console.log(poisonArr)
-  // console.log(steelArr)
-  // console.log(dragonArr)
-  // console.log(fightingArr)
-  // console.log(ghostArr)
-  // console.log(iceArr)
+  const returnEvolution = (e) => {
+    poke.get(e.evolution_chain.url).then((res) => {
+      const data1 = res.data;
 
-  // console.log(psychicArr)
-  // console.log(waterArr)
+      if (
+        data1.chain.evolves_to.length < 1 &&
+        data1.chain.species.name === pokemon
+      ) {
+        dispatch({ type: "evos/onEvos", payload: "" }),
+          dispatch({ type: "evos/onEvos2", payload: "" });
+      } else if (
+        data1.chain.evolves_to[0] &&
+        data1.chain.species.name === pokemon
+      ) {
+        dispatch({ type: "evos/onEvos", payload: "" }),
+          dispatch({
+            type: "evos/onEvos2",
+            payload: data1.chain.evolves_to[0].species.name,
+          });
+      } else if (
+        data1.chain.evolves_to[0].evolves_to < 1 &&
+        data1.chain.evolves_to[0].species.name === pokemon
+      ) {
+        dispatch({ type: "evos/onEvos", payload: data1.chain.species.name }),
+          dispatch({ type: "evos/onEvos2", payload: "" });
+      } else if (
+        data1.chain.evolves_to[0].evolves_to[0] &&
+        data1.chain.evolves_to[0].species.name === pokemon
+      ) {
+        dispatch({ type: "evos/onEvos", payload: data1.chain.species.name }),
+          dispatch({
+            type: "evos/onEvos2",
+            payload: data1.chain.evolves_to[0].evolves_to[0].species.name,
+          });
+      } else if (
+        data1.chain.evolves_to[0].evolves_to[0] &&
+        data1.chain.evolves_to[0].evolves_to[0].species.name === pokemon
+      ) {
+        dispatch({
+          type: "evos/onEvos",
+          payload: data1.chain.evolves_to[0].species.name,
+        }),
+          dispatch({
+            type: "evos/onEvos2",
+            payload: data1.chain.evolves_to[0].evolves_to[0].species.name,
+          });
+      }
+      
+    });
+  };
 
-  //   });
-  // };
+  
+  // //////////////////////////////////////////
+  // /////////////////////////////////////////
+  // ////////////////////////////////////////
 
+  
+
+  // /////////////////////////////////////////
+  // ////////////////////////////////////////
+  // ///////////////////////////////////////
   return (
     <div id="dexContainer" className="card text-white bg-danger">
       <Head>
         <title>PokeDex</title>
-        <meta name="description" content="Generated by create next app" />
-        <link rel="icon" href="/favicon.ico" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
+      {/* // //////////////////////////////////////////
+    // /////////////////////////////////////////
+    // ////////////////////////////////////////
+    <div className='App'>
+      <h1>React Text to Speech App</h1>
+      <input
+        type='text'
+        value={ourText}
+        placeholder='Enter Text'
+        onChange={(e) => setOurText(e.target.value)}
+      />
+      <button onClick={() => speechHandler(msg)}>SPEAK</button>
+    </div>
+    // /////////////////////////////////////////
+    // ////////////////////////////////////////
+    // /////////////////////////////////////// */}
 
       <div id="divContainer">
-        <div className="card-header" style={{display: 'flex', justifyContent: "space-between"}}>
+        {legend && (
           <button
-            style={{
-              backgroundColor: "#a0a3ab",
-              color: "white",
-              borderColor: "#a0a3ab",
-              borderStyle: "solid",
-              borderRadius: "30%",
-              textTransform: "capitalize",
-            }}
+            onClick={legendHide}
+            className="card-header"
+            style={{ border: "none" }}
           >
-            Normal
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                width: "96.4vw",
+              }}
+            >
+              <button
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: "#a0a3ab",
+                  color: "white",
+                  borderColor: "#a0a3ab",
+                  textTransform: "capitalize",
+                }}
+              >
+                Normal
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: "#aad13f",
+                  color: "white",
+                  borderColor: "#aad13f",
+
+                  textTransform: "capitalize",
+                }}
+              >
+                Bug
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: "#d1c73f",
+                  color: "white",
+                  borderColor: "#d1c73f",
+
+                  textTransform: "capitalize",
+                }}
+              >
+                Electric
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: "#d1943f",
+                  color: "white",
+                  borderColor: "#d1943f",
+
+                  textTransform: "capitalize",
+                }}
+              >
+                Fire
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: "#6e4d20",
+                  color: "white",
+                  borderColor: "#6e4d20",
+
+                  textTransform: "capitalize",
+                }}
+              >
+                Rock
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: "#449b27",
+                  color: "white",
+                  borderColor: "#449b27",
+
+                  textTransform: "capitalize",
+                }}
+              >
+                Grass
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: "#282927",
+                  color: "white",
+                  borderColor: "#282927",
+
+                  textTransform: "capitalize",
+                }}
+              >
+                Dark
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: "#c33ec8",
+                  color: "white",
+                  borderColor: "#c33ec8",
+
+                  textTransform: "capitalize",
+                }}
+              >
+                Fairy
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: "#6181ca",
+                  color: "white",
+                  borderColor: "#6181ca",
+
+                  textTransform: "capitalize",
+                }}
+              >
+                Flying
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: "#ab7120",
+                  color: "white",
+                  borderColor: "#ab7120",
+
+                  textTransform: "capitalize",
+                }}
+              >
+                Ground
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: "#7b21a8",
+                  color: "white",
+                  borderColor: "#7b21a8",
+
+                  textTransform: "capitalize",
+                }}
+              >
+                Poison
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: "#bbbabc",
+                  color: "white",
+                  borderColor: "#bbbabc",
+
+                  textTransform: "capitalize",
+                }}
+              >
+                Steel
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: "#4b23c4",
+                  color: "white",
+                  borderColor: "#4b23c4",
+
+                  textTransform: "capitalize",
+                }}
+              >
+                Dragon
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: "#4f3004",
+                  color: "white",
+                  borderColor: "#4f3004",
+
+                  textTransform: "capitalize",
+                }}
+              >
+                Fighting
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: "#1c3265",
+                  color: "white",
+                  borderColor: "#1c3265",
+
+                  textTransform: "capitalize",
+                }}
+              >
+                Ghost
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: "#1ea5bd",
+                  color: "white",
+                  borderColor: "#1ea5bd",
+
+                  textTransform: "capitalize",
+                }}
+              >
+                Ice
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: "#bd1eb0",
+                  color: "white",
+                  borderColor: "#bd1eb0",
+
+                  textTransform: "capitalize",
+                }}
+              >
+                Psychic
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: "#1e73bd",
+                  color: "white",
+                  borderColor: "#1e73bd",
+
+                  textTransform: "capitalize",
+                }}
+              >
+                Water
+              </button>
+            </div>
           </button>
-          <button
-            style={{
-              backgroundColor: "#aad13f",
-              color: "white",
-              borderColor: "#aad13f",
-              borderStyle: "solid",
-              borderRadius: "30%",
-              textTransform: "capitalize",
-            }}
-          >
-            Bug
-          </button>
-          <button
-            style={{
-              backgroundColor: "#d1c73f",
-              color: "white",
-              borderColor: "#d1c73f",
-              borderStyle: "solid",
-              borderRadius: "30%",
-              textTransform: "capitalize",
-            }}
-          >
-            Electric
-          </button>
-          <button
-            style={{
-              backgroundColor: "#d1943f",
-              color: "white",
-              borderColor: "#d1943f",
-              borderStyle: "solid",
-              borderRadius: "30%",
-              textTransform: "capitalize",
-            }}
-          >
-            Fire
-          </button>
-          <button
-            style={{
-              backgroundColor: "#6e4d20",
-              color: "white",
-              borderColor: "#6e4d20",
-              borderStyle: "solid",
-              borderRadius: "30%",
-              textTransform: "capitalize",
-            }}
-          >
-            Rock
-          </button>
-          <button
-            style={{
-              backgroundColor: "#449b27",
-              color: "white",
-              borderColor: "#449b27",
-              borderStyle: "solid",
-              borderRadius: "30%",
-              textTransform: "capitalize",
-            }}
-          >
-            Grass
-          </button>
-          <button
-            style={{
-              backgroundColor: "#282927",
-              color: "white",
-              borderColor: "#282927",
-              borderStyle: "solid",
-              borderRadius: "30%",
-              textTransform: "capitalize",
-            }}
-          >
-            Dark
-          </button>
-          <button
-            style={{
-              backgroundColor: "#c33ec8",
-              color: "white",
-              borderColor: "#c33ec8",
-              borderStyle: "solid",
-              borderRadius: "30%",
-              textTransform: "capitalize",
-            }}
-          >
-            Fairy
-          </button>
-          <button
-            style={{
-              backgroundColor: "#6181ca",
-              color: "white",
-              borderColor: "#6181ca",
-              borderStyle: "solid",
-              borderRadius: "30%",
-              textTransform: "capitalize",
-            }}
-          >
-            Flying
-          </button>
-          <button
-            style={{
-              backgroundColor: "#ab7120",
-              color: "white",
-              borderColor: "#ab7120",
-              borderStyle: "solid",
-              borderRadius: "30%",
-              textTransform: "capitalize",
-            }}
-          >
-            Ground
-          </button>
-          <button
-            style={{
-              backgroundColor: "#7b21a8",
-              color: "white",
-              borderColor: "#7b21a8",
-              borderStyle: "solid",
-              borderRadius: "30%",
-              textTransform: "capitalize",
-            }}
-          >
-            Poison
-          </button>
-          <button
-            style={{
-              backgroundColor: "#bbbabc",
-              color: "white",
-              borderColor: "#bbbabc",
-              borderStyle: "solid",
-              borderRadius: "30%",
-              textTransform: "capitalize",
-            }}
-          >
-            Steel
-          </button>
-          <button
-            style={{
-              backgroundColor: "#4b23c4",
-              color: "white",
-              borderColor: "#4b23c4",
-              borderStyle: "solid",
-              borderRadius: "30%",
-              textTransform: "capitalize",
-            }}
-          >
-            Dragon
-          </button>
-          <button
-            style={{
-              backgroundColor: "#4f3004",
-              color: "white",
-              borderColor: "#4f3004",
-              borderStyle: "solid",
-              borderRadius: "30%",
-              textTransform: "capitalize",
-            }}
-          >
-            Fighting
-          </button>
-          <button
-            style={{
-              backgroundColor: "#1c3265",
-              color: "white",
-              borderColor: "#1c3265",
-              borderStyle: "solid",
-              borderRadius: "30%",
-              textTransform: "capitalize",
-            }}
-          >
-            Ghost
-          </button>
-          <button
-            style={{
-              backgroundColor: "#1ea5bd",
-              color: "white",
-              borderColor: "#1ea5bd",
-              borderStyle: "solid",
-              borderRadius: "30%",
-              textTransform: "capitalize",
-            }}
-          >
-            Ice
-          </button>
-          <button
-            style={{
-              backgroundColor: "#bd1eb0",
-              color: "white",
-              borderColor: "#bd1eb0",
-              borderStyle: "solid",
-              borderRadius: "30%",
-              textTransform: "capitalize",
-            }}
-          >
-            Psychic
-          </button>
-          <button
-            style={{
-              backgroundColor: "#1e73bd",
-              color: "white",
-              borderColor: "#1e73bd",
-              borderStyle: "solid",
-              borderRadius: "30%",
-              textTransform: "capitalize",
-            }}
-          >
-            Water
-          </button>
-        </div>
+        )}
+        {!legend && (
+          <div style={{ display: "flex", justifyContent: "start" }}>
+            <button
+              className="card bg-danger"
+              onClick={legendHide}
+              style={{ color: "white", fontSize: "24px" }}
+            >
+              Type Legend+
+            </button>
+          </div>
+        )}
 
         <div className="col">
           <div className="container text-center">
@@ -4418,6 +4436,7 @@ export default function Home() {
                       >
                         <li className="nav-item" role="presentation">
                           <button
+                            key="li1"
                             className="nav-link active"
                             style={{ color: "white" }}
                             id="home-tab"
@@ -4433,6 +4452,7 @@ export default function Home() {
                         </li>
                         <li className="nav-item" role="presentation">
                           <button
+                            key="li2"
                             className="nav-link"
                             style={{ color: "white" }}
                             id="profile-tab"
@@ -4448,6 +4468,7 @@ export default function Home() {
                         </li>
                         <li className="nav-item" role="presentation">
                           <button
+                            key="li3"
                             className="nav-link"
                             style={{ color: "white" }}
                             id="contact-tab"
@@ -4463,6 +4484,7 @@ export default function Home() {
                         </li>
                         <li className="nav-item" role="presentation">
                           <button
+                            key="li4"
                             className="nav-link"
                             style={{ color: "white" }}
                             id="disabled-tab"
@@ -4522,7 +4544,7 @@ export default function Home() {
                 )}
               </div>
               <div className="col bg-danger" style={{ height: "100vh" }}>
-                <form onSubmit={searchPokemon}>
+                <form id="my-form" onSubmit={searchPokemon}>
                   <div
                     id="search"
                     className="input-group mb-3 d-flex align-content-center"
@@ -4534,7 +4556,12 @@ export default function Home() {
                       aria-label="Recipient's username"
                       aria-describedby="basic-addon2"
                       value={pokemon}
-                      onChange={(event) => setPokemon(event.target.value)}
+                      onChange={(event) =>
+                        dispatch({
+                          type: "pokemon/onPokemon",
+                          payload: event.target.value,
+                        })
+                      }
                     />
                     <div className="input-group-append">
                       <button type="submit" className="btn btn-primary btn-lg">
@@ -4549,11 +4576,37 @@ export default function Home() {
                       <h1 className="card-title">
                         {body.name.charAt(0).toUpperCase() + body.name.slice(1)}
                       </h1>
-                      <img
-                        className="card-img-top"
-                        src={pic}
-                        alt="Card image cap"
-                      />
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          fontSize: "45px",
+                        }}
+                      >
+                        <button
+                          form="my-form"
+                          type="submit"
+                          onClick={getEvos}
+                          className="btn-danger btn-lg"
+                          style={{ fontSize: "45px" }}
+                        >
+                          <i className="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <img
+                          className="card-img-top"
+                          src={pic}
+                          alt="Card image cap"
+                        />
+                        <button
+                          form="my-form"
+                          type="submit"
+                          onClick={getEvos2}
+                          className="btn-danger btn-lg"
+                          style={{ fontSize: "45px" }}
+                        >
+                          <i className="fa-solid fa-chevron-right"></i>
+                        </button>
+                      </div>
                       <div className="card-body">
                         <h4 id="desc" className="card-text">
                           {species}
@@ -4637,9 +4690,9 @@ export default function Home() {
                               role="progressbar"
                               aria-label="Default striped example"
                               style={skill1}
-                              aria-valuenow="10"
-                              aria-valuemin="0"
-                              aria-valuemax="100"
+                              // aria-valuenow="10"
+                              // aria-valuemin="0"
+                              // aria-valuemax="100"
                             >
                               HP
                             </div>
@@ -4650,9 +4703,9 @@ export default function Home() {
                               role="progressbar"
                               aria-label="Success striped example"
                               style={skill2}
-                              aria-valuenow="25"
-                              aria-valuemin="0"
-                              aria-valuemax="100"
+                              // aria-valuenow="25"
+                              // aria-valuemin="0"
+                              // aria-valuemax="100"
                             >
                               Attack
                             </div>
@@ -4663,9 +4716,9 @@ export default function Home() {
                               role="progressbar"
                               aria-label="Info striped example"
                               style={skill3}
-                              aria-valuenow="50"
-                              aria-valuemin="0"
-                              aria-valuemax="100"
+                              // aria-valuenow="50"
+                              // aria-valuemin="0"
+                              // aria-valuemax="100"
                             >
                               Defense
                             </div>
@@ -4676,9 +4729,9 @@ export default function Home() {
                               role="progressbar"
                               aria-label="Warning striped example"
                               style={skill4}
-                              aria-valuenow="75"
-                              aria-valuemin="0"
-                              aria-valuemax="100"
+                              // aria-valuenow="75"
+                              // aria-valuemin="0"
+                              // aria-valuemax="100"
                             >
                               Special-Attack
                             </div>
@@ -4689,9 +4742,9 @@ export default function Home() {
                               role="progressbar"
                               aria-label="Danger striped example"
                               style={skill5}
-                              aria-valuenow="100"
-                              aria-valuemin="0"
-                              aria-valuemax="100"
+                              // aria-valuenow="100"
+                              // aria-valuemin="0"
+                              // aria-valuemax="100"
                             >
                               Special-Defense
                             </div>
@@ -4702,12 +4755,11 @@ export default function Home() {
                               role="progressbar"
                               aria-label="Default striped example"
                               style={skill6}
-                              aria-valuenow="10"
-                              aria-valuemin="0"
-                              aria-valuemax="100"
+                              // aria-valuenow="10"
+                              // aria-valuemin="0"
+                              // aria-valuemax="100"
                             >
-                              {" "}
-                              Speed{" "}
+                              Speed
                             </div>
                           </div>
                         </div>
@@ -4745,10 +4797,20 @@ export default function Home() {
                             <div className="col">
                               <h5 className="card-title">Type:</h5>
                               <p className="card-text">
-                                {body.types[0].type.name
-                                  .charAt(0)
-                                  .toUpperCase() +
-                                  body.types[0].type.name.slice(1)}
+                                {body.types.length > 1
+                                  ? body.types[0].type.name
+                                      .charAt(0)
+                                      .toUpperCase() +
+                                    body.types[0].type.name.slice(1) +
+                                    "/" +
+                                    body.types[1].type.name
+                                      .charAt(0)
+                                      .toUpperCase() +
+                                    body.types[1].type.name.slice(1)
+                                  : body.types[0].type.name
+                                      .charAt(0)
+                                      .toUpperCase() +
+                                    body.types[0].type.name.slice(1)}
                               </p>
                             </div>
                           </div>
