@@ -1,14 +1,16 @@
 import Head from "next/head";
 import Script from "next/script";
 import axios from "axios";
-import { useState, React, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { onlegend } from "../redux/legend";
 import { onPokemon } from "../redux/pokemon";
 import { evos, evos2 } from "../redux/evos";
-
 import { useSelector, useDispatch } from "react-redux";
 import { usePopper } from "react-popper";
 import classNames from "classnames";
+import { onSpeech } from "../redux/speech";
+import { onMsg } from "../redux/msg";
+
 
 const poke = axios.create({
   baseURL: "https://pokeapi.co/",
@@ -45,6 +47,9 @@ export default function Home() {
   const { evos } = useSelector((state) => state.evos);
   const { evos2 } = useSelector((state) => state.evos);
   const [type, setType] = useState("") 
+  const { speech } = useSelector((state) => state.speech);
+
+  const { msg } = useSelector((state) => state.msg);
  
 
   const dispatch = useDispatch();
@@ -961,21 +966,50 @@ export default function Home() {
 
   // }
 
-  useEffect(() => {
-    const msg = new SpeechSynthesisUtterance()
+  // //////////////////
+  
+  //  /////////////////
 
+  useEffect(() => {
+    const msg1 = new SpeechSynthesisUtterance()
+
+    // dispatch({type: "msg/onMsg", payload: msg1})
+
+    console.log(new SpeechSynthesisUtterance())
     const speechHandler = (msg) => {
       console.log(species)
-      msg.text = pokemon + "," + 'a' + type + "pokemon," + species
-      window.speechSynthesis.speak(msg)
+      msg.text = pokemon + "..." + 'a' + type + "pokemon..." + species
+      msg.pitch = 5
+      msg.rate = 2
+      if (!speech)  {
+        msg.volume = 0
+        window.speechSynthesis.cancel(msg)
+      } else {        msg.volume = 1
+        window.speechSynthesis.speak(msg)
+      }
+
     }
-    speechHandler(msg)
+    speechHandler(msg1)
   }, [species])
 
+  const speakPokemon = () => {
+    const msg = new SpeechSynthesisUtterance()
+
+    msg.text = pokemon + "..." + 'a' + type + "pokemon..." + species
+      msg.pitch = 5
+      msg.rate = 2
+      if (!speech)  {
+        msg.volume = 0
+        window.speechSynthesis.cancel(msg)
+      } else {        msg.volume = 1
+        window.speechSynthesis.speak(msg)
+      }
+  }
+ 
   const searchPokemon = async (e) => {
     e.preventDefault();
     if (pokemon != "") {
-      await poke.get(`api/v2/pokemon/${pokemon}`).then((res) => {
+      await poke.get(`api/v2/pokemon/${pokemon.toLowerCase()}`).then((res) => {
         console.log(res.data);
         const data = res.data;
         pokeID = data.id;
@@ -4081,6 +4115,35 @@ export default function Home() {
   const legendHide = () => {
     dispatch(onlegend());
   };
+  const speechHide = () => {
+    dispatch(onSpeech())
+    
+  //   const speechHandler = (msg) => {
+  //     if (!speech)  {
+  //       msg.volume = 0
+  //     } else {        msg.volume = 1
+  //     }
+  //     speechHandler()
+  // }
+}
+
+  // const speechHide2 = () => {
+  //   dispatch(onspeech())
+  //   const msg = new SpeechSynthesisUtterance()
+
+  //   // console.log(new SpeechSynthesisUtterance())
+  //   const speechHandler = (msg) => {
+  //     console.log(species)
+  //     msg.text = pokemon + "..." + 'a' + type + "pokemon..." + species
+  //     msg.pitch = 5
+  //     msg.rate = 2
+  //     msg.volume = -1
+  //     window.speechSynthesis.speak(msg)
+  //     console.log(msg)
+  //   }
+  //   speechHandler(msg)
+  // }
+
 
   const returnEvolution2 = (e) => {
     poke.get(e.species.url).then((res) => {
@@ -4136,8 +4199,26 @@ export default function Home() {
             type: "evos/onEvos2",
             payload: data1.chain.evolves_to[0].evolves_to[0].species.name,
           });
+      } 
+      else {dispatch({ type: "evos/onEvos", payload: "" }),
+      dispatch({ type: "evos/onEvos2", payload: "" });}
+
+      if (data1.chain.species.name === "eevee") {
+        const form = data1.chain.evolves_to
+        dispatch({ type: "evos/onEvos", payload: "" }),
+          dispatch({ type: "evos/onEvos2", payload: form[0].species.name})
+          if (form[0].species.name === pokemon) {
+            dispatch({ type: "evos/onEvos", payload: "eevee" }),
+          dispatch({ type: "evos/onEvos2", payload: form[1].species.name})
+          } 
+          if (form[1].species.name === pokemon) {
+            dispatch({ type: "evos/onEvos", payload: "eevee" }),
+          dispatch({ type: "evos/onEvos2", payload: form[2].species.name})
+          }
+
       }
-      
+      console.log(evos)
+      console.log(evos2)
     });
   };
 
@@ -4411,12 +4492,23 @@ export default function Home() {
             <button
               className="card bg-danger"
               onClick={legendHide}
-              style={{ color: "white", fontSize: "24px" }}
+              style={{ marginTop:"10px",marginRight:"10px",marginLeft:"10px",color: "white", fontSize: "24px" }}
             >
               Type Legend+
             </button>
           </div>
-        )}
+        )}  
+          <div style={{ display: "flex", justifyContent: "start" }}>
+            {speech? 
+            <button 
+            className="card bg-danger"
+              onClick={speechHide}
+              style={{ margin:"10px",color: "white", fontSize: "24px" }}>
+            Mute</button> : <button className="card bg-danger" onClick={speechHide}
+              style={{ margin:"10px",color: "#a6a5a5", fontSize: "24px", borderColor: "#a6a5a5" }}>Mute</button>
+
+}
+          </div>
 
         <div className="col">
           <div className="container text-center">
@@ -4573,8 +4665,15 @@ export default function Home() {
                 {species ? (
                   <div id="picDescContainer1">
                     <div className="card text-bg-danger mb-3">
-                      <h1 className="card-title">
+                      <h1 className="card-title" style={{ display: "flex", justifyContent: "space-between" }}>
+                        <div></div>
                         {body.name.charAt(0).toUpperCase() + body.name.slice(1)}
+                        <button 
+            className="card bg-danger"
+              onClick={speakPokemon}
+              style={{ color: "white", fontSize: "24px", display: "flex", justifyContent: "center" }}>
+              {speech ? <i className="fa-solid fa-volume-high"></i> : <i className="fa-solid fa-volume-xmark"></i> }
+            </button>
                       </h1>
                       <div
                         style={{
