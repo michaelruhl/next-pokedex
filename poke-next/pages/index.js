@@ -4196,42 +4196,44 @@ export default function Home() {
           dispatch({ type: "evos/onEvos", payload: "eevee" }),
             dispatch({ type: "evos/onEvos2", payload: form[2].species.name });
         }
+        if (form[2].species.name === pokemon) {
+          dispatch({ type: "evos/onEvos", payload: "eevee" }),
+            dispatch({ type: "evos/onEvos2", payload: form[3].species.name });
+        }
+        if (form[3].species.name === pokemon) {
+          dispatch({ type: "evos/onEvos", payload: "eevee" }),
+            dispatch({ type: "evos/onEvos2", payload: form[4].species.name });
+        }
+        if (form[4].species.name === pokemon) {
+          dispatch({ type: "evos/onEvos", payload: "eevee" }),
+            dispatch({ type: "evos/onEvos2", payload: form[5].species.name });
+        }
+        if (form[5].species.name === pokemon) {
+          dispatch({ type: "evos/onEvos", payload: "eevee" }),
+            dispatch({ type: "evos/onEvos2", payload: form[6].species.name });
+        }
+        if (form[6].species.name === pokemon) {
+          dispatch({ type: "evos/onEvos", payload: "eevee" }),
+            dispatch({ type: "evos/onEvos2", payload: form[7].species.name });
+        }
+        if (form[7].species.name === pokemon) {
+          dispatch({ type: "evos/onEvos", payload: "eevee" }),
+            dispatch({ type: "evos/onEvos2", payload: "" });
+        }
       }
       console.log(evos);
       console.log(evos2);
     });
   };
 
-  // //////////////////////////////////////////
-  // /////////////////////////////////////////
-  // ////////////////////////////////////////
-
-  // /////////////////////////////////////////
-  // ////////////////////////////////////////
-  // ///////////////////////////////////////
+ 
   return (
     <div id="dexContainer" className="card text-white bg-danger">
       <Head>
         <title>PokeDex</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      {/* // //////////////////////////////////////////
-    // /////////////////////////////////////////
-    // ////////////////////////////////////////
-    <div className='App'>
-      <h1>React Text to Speech App</h1>
-      <input
-        type='text'
-        value={ourText}
-        placeholder='Enter Text'
-        onChange={(e) => setOurText(e.target.value)}
-      />
-      <button onClick={() => speechHandler(msg)}>SPEAK</button>
-    </div>
-    // /////////////////////////////////////////
-    // ////////////////////////////////////////
-    // /////////////////////////////////////// */}
-
+    
       <div id="divContainer">
         {legend && (
           <button
