@@ -3,7 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 export const speechSlice = createSlice({
   name: "speech",
   initialState: {
-    speech: false,
+    speech: true,
     
   },
   reducers: {

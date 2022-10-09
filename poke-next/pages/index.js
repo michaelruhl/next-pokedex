@@ -10,6 +10,9 @@ import { usePopper } from "react-popper";
 import classNames from "classnames";
 import { onSpeech } from "../redux/speech";
 import { onMsg } from "../redux/msg";
+import { useSpeechSynthesis } from 'react-speech-kit';
+
+
 
 const poke = axios.create({
   baseURL: "https://pokeapi.co/",
@@ -17,6 +20,7 @@ const poke = axios.create({
 });
 
 export default function Home() {
+  
   // const [pokemon, setPokemon] = useState("");
   const [pic, setPic] = useState("");
   const [abilities, setAbilities] = useState("");
@@ -47,8 +51,9 @@ export default function Home() {
   const { evos2 } = useSelector((state) => state.evos);
   const [type, setType] = useState("");
   const { speech } = useSelector((state) => state.speech);
-
+  const [pokemonName, setPokemonName] = useState("");
   const { msg } = useSelector((state) => state.msg);
+  const { cancel, speak, speaking, supported, voices, pause, resume } = useSpeechSynthesis()
 
   const dispatch = useDispatch();
   const [evolve, setEvolve] = useState("");
@@ -949,36 +954,26 @@ export default function Home() {
 
   const getEvos = () => {
     dispatch({ type: "pokemon/onPokemon", payload: evos });
-    // runSearch()
   };
-  // const runSearch = () => {
-  //   searchPokemon2(pokemon)
 
-  // }
   const getEvos2 = () => {
     dispatch({ type: "pokemon/onPokemon", payload: evos2 });
-    // runSearch2()
   };
-  // const runSearch2 = () => {
-  //   searchPokemon2(pokemon)
 
-  // }
-
-  // //////////////////
-
-  //  /////////////////
+  const setPokemonNameFunc = () => {
+    setPokemonName(pokemon);
+  };
 
   useEffect(() => {
+    setPokemonName(pokemon);
+
     const msg1 = new SpeechSynthesisUtterance();
 
-    // dispatch({type: "msg/onMsg", payload: msg1})
-
-    console.log(new SpeechSynthesisUtterance());
     const speechHandler = (msg) => {
       console.log(species);
-      msg.text = pokemon + "..." + "a" + type + "pokemon..." + species;
-      msg.pitch = 5;
-      msg.rate = 2;
+      msg.text = pokemonName + "..." + "a" + type + "pokemon..." + species;
+      msg.pitch = 7;
+      msg.rate = 1.5;
       if (!speech) {
         msg.volume = 0;
         window.speechSynthesis.cancel(msg);
@@ -988,12 +983,14 @@ export default function Home() {
       }
     };
     speechHandler(msg1);
+
+
   }, [species]);
 
   const speakPokemon = () => {
     const msg = new SpeechSynthesisUtterance();
 
-    msg.text = pokemon + "..." + "a" + type + "pokemon..." + species;
+    msg.text = pokemonName + "..." + "a" + type + "pokemon..." + species;
     msg.pitch = 5;
     msg.rate = 2;
     if (!speech) {
@@ -1005,66 +1002,77 @@ export default function Home() {
     }
   };
 
+  // const msg1 = new SpeechSynthesisUtterance();
+  if (!speech) {
+    // msg1.volume = 0;
+    // window.speechSynthesis.cancel(msg1);
+    cancel
+  } 
+  // else {
+    // msg1.volume = 1;
+    // window.speechSynthesis.speak(msg1);
+  // }
+
   const searchPokemon = async (e) => {
     e.preventDefault();
+    setPokemonName(pokemon);
     if (pokemon != "") {
-      await poke.get(`api/v2/pokemon/${pokemon.toLowerCase()}`).then((res) => {
-        console.log(res.data);
-        const data = res.data;
-        pokeID = data.id;
-        abilityURL = data.abilities;
-
-        swURL = data.types;
-        setPic(data.sprites.front_default);
-        setAbilities(data.abilities);
-        setBody(data);
-        if (data.types.length > 1) {
-          setType(data.types[0].type.name + data.types[1].type.name);
-        } else {
-          setType(data.types[0].type.name);
-        }
-        // setTypes(data.types)
-        pokeDescription(pokeID);
-
-        pokeAbility();
-        returnMoves(data);
-        returnEvolution2(data);
-
-        const statsList = data.stats;
-        const returnStatArray = () => {
-          let statArray = [];
-          let skillArray = [];
-          let largestStat;
-
-          for (let stat of statsList) {
-            statArray.push(stat.base_stat);
+      await poke
+        .get(`api/v2/pokemon/${pokemon.toLowerCase()}`)
+        .then((res) => {
+          console.log(res.data);
+          const data = res.data;
+          pokeID = data.id;
+          abilityURL = data.abilities;
+          swURL = data.types;
+          setPic(data.sprites.front_default);
+          setAbilities(data.abilities);
+          setBody(data);
+          if (data.types.length > 1) {
+            setType(data.types[0].type.name + data.types[1].type.name);
+          } else {
+            setType(data.types[0].type.name);
           }
-          largestStat = Math.max(...statArray);
-          for (let skill of statArray) {
-            skillArray.push(Math.floor((skill / largestStat) * 100));
-          }
-          // setSkill1(skillArray)
+          pokeDescription(pokeID);
 
-          setSkill1({ width: `${skillArray[0]}%` });
-          setSkill2({ width: `${skillArray[1]}%` });
-          setSkill3({ width: `${skillArray[2]}%` });
-          setSkill4({ width: `${skillArray[3]}%` });
-          setSkill5({ width: `${skillArray[4]}%` });
-          setSkill6({ width: `${skillArray[5]}%` });
-        };
+          pokeAbility();
+          returnMoves(data);
+          returnEvolution2(data);
 
-        returnStatArray();
-      });
-      // dispatch({ type: "pokemon/onPokemon", payload: ''})
+          const statsList = data.stats;
+          const returnStatArray = () => {
+            let statArray = [];
+            let skillArray = [];
+            let largestStat;
+
+            for (let stat of statsList) {
+              statArray.push(stat.base_stat);
+            }
+            largestStat = Math.max(...statArray);
+            for (let skill of statArray) {
+              skillArray.push(Math.floor((skill / largestStat) * 100));
+            }
+
+            setSkill1({ width: `${skillArray[0]}%` });
+            setSkill2({ width: `${skillArray[1]}%` });
+            setSkill3({ width: `${skillArray[2]}%` });
+            setSkill4({ width: `${skillArray[3]}%` });
+            setSkill5({ width: `${skillArray[4]}%` });
+            setSkill6({ width: `${skillArray[5]}%` });
+          };
+
+          returnStatArray();
+          dispatch({ type: "pokemon/onPokemon", payload: "" });
+        })
+        .catch(function (error) {
+          
+            alert(
+              'Haha, Thats not a pokemon! Try typing in "Squirtle" or "Pikachu"! :)'
+            );
+            setPokemonName("");
+         
+        });
     }
-
-    const input = document.getElementById("searchPoke");
-
-    const btn = document.getElementById("searchButt");
-
-    btn.addEventListener("click", function handleButtonClick() {
-      input.value = "";
-    });
   };
 
   // API call for GETing pokemon description
@@ -4123,6 +4131,7 @@ export default function Home() {
   };
   const speechHide = () => {
     dispatch(onSpeech());
+    
   };
 
   const returnEvolution2 = (e) => {
@@ -4226,272 +4235,278 @@ export default function Home() {
     });
   };
 
- 
+  const stylePic = {
+    backgroundImage: `url(${"https://www.transparenttextures.com/patterns/graphy.png"})`,
+  };
+
   return (
-    <div id="dexContainer" className="card text-white bg-danger">
+    <div
+      id="dexContainer"
+      className="card text-white bg-danger"
+      style={{height: "100vh",backgroundImage: `url(${"https://www.transparenttextures.com/patterns/graphy.png"})`}}
+    >
       <Head>
         <title>PokeDex</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-    
-      <div id="divContainer">
-        {legend && (
-          <button
-            onClick={legendHide}
-            className="card-header"
-            style={{ border: "none" }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                width: "96.4vw",
-              }}
-            >
-              <button
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: "#a0a3ab",
-                  color: "white",
-                  borderColor: "#a0a3ab",
-                  textTransform: "capitalize",
-                }}
-              >
-                Normal
-              </button>
-              <button
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: "#aad13f",
-                  color: "white",
-                  borderColor: "#aad13f",
-
-                  textTransform: "capitalize",
-                }}
-              >
-                Bug
-              </button>
-              <button
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: "#d1c73f",
-                  color: "white",
-                  borderColor: "#d1c73f",
-
-                  textTransform: "capitalize",
-                }}
-              >
-                Electric
-              </button>
-              <button
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: "#d1943f",
-                  color: "white",
-                  borderColor: "#d1943f",
-
-                  textTransform: "capitalize",
-                }}
-              >
-                Fire
-              </button>
-              <button
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: "#6e4d20",
-                  color: "white",
-                  borderColor: "#6e4d20",
-
-                  textTransform: "capitalize",
-                }}
-              >
-                Rock
-              </button>
-              <button
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: "#449b27",
-                  color: "white",
-                  borderColor: "#449b27",
-
-                  textTransform: "capitalize",
-                }}
-              >
-                Grass
-              </button>
-              <button
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: "#282927",
-                  color: "white",
-                  borderColor: "#282927",
-
-                  textTransform: "capitalize",
-                }}
-              >
-                Dark
-              </button>
-              <button
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: "#c33ec8",
-                  color: "white",
-                  borderColor: "#c33ec8",
-
-                  textTransform: "capitalize",
-                }}
-              >
-                Fairy
-              </button>
-              <button
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: "#6181ca",
-                  color: "white",
-                  borderColor: "#6181ca",
-
-                  textTransform: "capitalize",
-                }}
-              >
-                Flying
-              </button>
-              <button
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: "#ab7120",
-                  color: "white",
-                  borderColor: "#ab7120",
-
-                  textTransform: "capitalize",
-                }}
-              >
-                Ground
-              </button>
-              <button
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: "#7b21a8",
-                  color: "white",
-                  borderColor: "#7b21a8",
-
-                  textTransform: "capitalize",
-                }}
-              >
-                Poison
-              </button>
-              <button
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: "#bbbabc",
-                  color: "white",
-                  borderColor: "#bbbabc",
-
-                  textTransform: "capitalize",
-                }}
-              >
-                Steel
-              </button>
-              <button
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: "#4b23c4",
-                  color: "white",
-                  borderColor: "#4b23c4",
-
-                  textTransform: "capitalize",
-                }}
-              >
-                Dragon
-              </button>
-              <button
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: "#4f3004",
-                  color: "white",
-                  borderColor: "#4f3004",
-
-                  textTransform: "capitalize",
-                }}
-              >
-                Fighting
-              </button>
-              <button
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: "#1c3265",
-                  color: "white",
-                  borderColor: "#1c3265",
-
-                  textTransform: "capitalize",
-                }}
-              >
-                Ghost
-              </button>
-              <button
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: "#1ea5bd",
-                  color: "white",
-                  borderColor: "#1ea5bd",
-
-                  textTransform: "capitalize",
-                }}
-              >
-                Ice
-              </button>
-              <button
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: "#bd1eb0",
-                  color: "white",
-                  borderColor: "#bd1eb0",
-
-                  textTransform: "capitalize",
-                }}
-              >
-                Psychic
-              </button>
-              <button
-                className="btn btn-sm"
-                style={{
-                  backgroundColor: "#1e73bd",
-                  color: "white",
-                  borderColor: "#1e73bd",
-
-                  textTransform: "capitalize",
-                }}
-              >
-                Water
-              </button>
-            </div>
-          </button>
-        )}
-        {!legend && (
-          <div style={{ display: "flex", justifyContent: "start" }}>
+      <div id="divContainer" >
+        <div className="card text-white bg-danger">
+          {legend && (
             <button
-              className="card bg-danger"
               onClick={legendHide}
-              style={{
-                margin: "10px",
-
-                color: "white",
-                fontSize: "24px",
-              }}
+              className="card-header"
+              style={{ border: "none" }}
             >
-              Type Legend+
-            </button>
-          </div>
-        )}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  width: "96.4vw",
+                }}
+              >
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#a0a3ab",
+                    color: "white",
+                    borderColor: "#a0a3ab",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Normal
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#aad13f",
+                    color: "white",
+                    borderColor: "#aad13f",
 
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Bug
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#d1c73f",
+                    color: "white",
+                    borderColor: "#d1c73f",
+
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Electric
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#d1943f",
+                    color: "white",
+                    borderColor: "#d1943f",
+
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Fire
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#6e4d20",
+                    color: "white",
+                    borderColor: "#6e4d20",
+
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Rock
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#449b27",
+                    color: "white",
+                    borderColor: "#449b27",
+
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Grass
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#282927",
+                    color: "white",
+                    borderColor: "#282927",
+
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Dark
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#c33ec8",
+                    color: "white",
+                    borderColor: "#c33ec8",
+
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Fairy
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#6181ca",
+                    color: "white",
+                    borderColor: "#6181ca",
+
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Flying
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#ab7120",
+                    color: "white",
+                    borderColor: "#ab7120",
+
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Ground
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#7b21a8",
+                    color: "white",
+                    borderColor: "#7b21a8",
+
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Poison
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#bbbabc",
+                    color: "white",
+                    borderColor: "#bbbabc",
+
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Steel
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#4b23c4",
+                    color: "white",
+                    borderColor: "#4b23c4",
+
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Dragon
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#4f3004",
+                    color: "white",
+                    borderColor: "#4f3004",
+
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Fighting
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#1c3265",
+                    color: "white",
+                    borderColor: "#1c3265",
+
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Ghost
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#1ea5bd",
+                    color: "white",
+                    borderColor: "#1ea5bd",
+
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Ice
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#bd1eb0",
+                    color: "white",
+                    borderColor: "#bd1eb0",
+
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Psychic
+                </button>
+                <button
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: "#1e73bd",
+                    color: "white",
+                    borderColor: "#1e73bd",
+
+                    textTransform: "capitalize",
+                  }}
+                >
+                  Water
+                </button>
+              </div>
+            </button>
+          )}
+        </div>
         <div className="col">
-          <div className="container text-center">
+          <div className="container text-center" style={{marginTop: "5vh"}}>
             <div className="row">
               <div className="col">
                 {species ? (
                   <div id="picDescContainer1">
                     <div className="card text-bg-danger mb-3 ">
-                      <div className="card-header" style={{ fontSize: "36px" }}>
-                        Moves
+                      <div
+                        className="card-header"
+                        style={{
+                          fontSize: "36px",
+                          display: "flex",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: "36px",
+                            display: "flex",
+                            // justifyContent: "center"
+                          }}
+                        >
+                          Moves
+                        </div>
                       </div>
 
                       <ul
@@ -4565,6 +4580,7 @@ export default function Home() {
                           </button>
                         </li>
                       </ul>
+
                       <div className="tab-content" id="myTabContent">
                         <div
                           className="tab-pane fade show active"
@@ -4609,7 +4625,7 @@ export default function Home() {
                   <div></div>
                 )}
               </div>
-              <div className="col bg-danger" style={{ height: "100vh" }}>
+              <div className="col bg-danger" >
                 <form id="my-form" onSubmit={searchPokemon}>
                   <div
                     id="search"
@@ -4632,6 +4648,7 @@ export default function Home() {
                     />
                     <div className="input-group-append">
                       <button
+                        onClick={setPokemonNameFunc}
                         id="searchButt"
                         type="submit"
                         className="btn btn-primary btn-lg"
@@ -4641,6 +4658,52 @@ export default function Home() {
                     </div>
                   </div>
                 </form>
+                <div style={{ display: "flex", justifyContent: "center" }}>
+                  {!legend  ? (
+                    <button
+                      className="card bg-danger"
+                      onClick={legendHide}
+                      style={{
+                        margin: "10px",
+                        display: "flex",
+                        // justifyContent: "end",
+                        color: "white",
+                        fontSize: "24px",
+                      }}
+                    >
+                      Type Legend+
+                    </button>
+                  ) : (
+                    <button
+                      className="card bg-danger"
+                      onClick={legendHide}
+                      style={{
+                        margin: "10px",
+                        display: "flex",
+                        // justifyContent: "end",
+                        color: "#a6a5a5",
+                        borderColor: "#a6a5a5",
+                        fontSize: "24px",
+                      }}
+                    >
+                      Type Legend+
+                    </button>
+                  )}
+
+                  
+                </div>
+                {!species && 
+                <div>
+                <div className="card" >
+  <img  className="card-img-top" src="images/appLogo.jpg" alt="logo" />
+  <div className="card-img-overlay" style={{display:"flex", alignItems:"center", justifyContent: "center"}}>
+    <h3 className="card-title" >Welcome to Next.js Pokédex! Start by typing in a Pokémon.</h3>
+    
+  </div>
+</div>
+<div style={{display: "flex", justifyContent:"end"}}>By Michael Ruhl</div>
+</div>
+}
                 {species ? (
                   <div id="picDescContainer1">
                     <div className="card text-bg-danger mb-3">
@@ -4664,7 +4727,7 @@ export default function Home() {
                                 fontSize: "24px",
                               }}
                             >
-                              Mute
+                             <div onClick={cancel}>Mute</div>
                             </button>
                           ) : (
                             <button
@@ -4673,12 +4736,12 @@ export default function Home() {
                               style={{
                                 justifyContent: "center",
 
-                                color: "#a6a5a5",
                                 fontSize: "24px",
+                                color: "#a6a5a5",
                                 borderColor: "#a6a5a5",
                               }}
-                            >
-                              Mute
+                            >Mute
+                              
                             </button>
                           )}
                         </div>

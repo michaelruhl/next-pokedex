@@ -132,6 +132,7 @@
 
 #dexContainer{
   display: flex;
+  background-image: url("https://www.transparenttextures.com/patterns/graphy.png");
 }
 
 #desc{
