@@ -993,10 +993,9 @@ export default function Home() {
 
   const speakPokemon = () => {
     const msg = new SpeechSynthesisUtterance();
-
-    msg.text = pokemonName + "..." + "a" + type + "pokemon..." + species;
-    msg.pitch = 5;
-    msg.rate = 2;
+    msg.text = (body.name.charAt(0).toUpperCase() + body.name.slice(1)) + "..." + "a" + type + "pokemon..." + species;
+    msg.pitch = 7;
+      msg.rate = 1.5;
     if (!speech) {
       msg.volume = 0;
       window.speechSynthesis.cancel(msg);
@@ -4747,7 +4746,7 @@ export default function Home() {
                             </button>
                           )}
                         </div>
-                        {body.name.charAt(0).toUpperCase() + body.name.slice(1)}
+                       <div id="pokemonAlias">{body.name.charAt(0).toUpperCase() + body.name.slice(1)}</div> 
                         <button
                           className="card bg-danger"
                           onClick={speakPokemon}
