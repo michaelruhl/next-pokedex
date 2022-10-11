@@ -1,6 +1,9 @@
 import { Html, Head, Main, NextScript } from 'next/document'
 
 export default function Document() {
+  const stylePic = {
+    backgroundImage: `url(${"https://www.transparenttextures.com/patterns/graphy.png"})`,
+  };
   return (
     <Html>
       <Head>
@@ -17,8 +20,10 @@ export default function Document() {
   crossOrigin="anonymous"
   referrerPolicy="no-referrer"
 />
+<link rel="stylesheet" href="../styles/globals.css" />
+
       </Head>
-      <body>
+      <body className="bg-danger" style={{backgroundImage: `url(${"https://www.transparenttextures.com/patterns/graphy.png"})`}}>
         <Main />
         <NextScript />
       </body>

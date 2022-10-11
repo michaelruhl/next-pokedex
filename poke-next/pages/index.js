@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Script from "next/script";
 import axios from "axios";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useWindowSize } from "react";
 import { onlegend } from "../redux/legend";
 import { onPokemon } from "../redux/pokemon";
 import { evos, evos2 } from "../redux/evos";
@@ -11,6 +11,7 @@ import classNames from "classnames";
 import { onSpeech } from "../redux/speech";
 import { onMsg } from "../redux/msg";
 import { useSpeechSynthesis } from 'react-speech-kit';
+
 
 
 
@@ -54,12 +55,14 @@ export default function Home() {
   const [pokemonName, setPokemonName] = useState("");
   const { msg } = useSelector((state) => state.msg);
   const { cancel, speak, speaking, supported, voices, pause, resume } = useSpeechSynthesis()
+  const [ sidebar, setSidebar] = useState(true)
 
   const dispatch = useDispatch();
   const [evolve, setEvolve] = useState("");
   const [evolve2, setEvolve2] = useState("");
   const [urlLink, setUrl] = useState("");
 
+  
   let pokeID;
   let abilityURL;
   let swURL;
@@ -966,11 +969,12 @@ export default function Home() {
 
   useEffect(() => {
     setPokemonName(pokemon);
-
     const msg1 = new SpeechSynthesisUtterance();
-
+    let width = window.innerWidth
+    if (width < 700) {
+      setSidebar(false)
+    } else {setSidebar(true)}
     const speechHandler = (msg) => {
-      console.log(species);
       msg.text = pokemonName + "..." + "a" + type + "pokemon..." + species;
       msg.pitch = 7;
       msg.rate = 1.5;
@@ -1020,7 +1024,6 @@ export default function Home() {
       await poke
         .get(`api/v2/pokemon/${pokemon.toLowerCase()}`)
         .then((res) => {
-          console.log(res.data);
           const data = res.data;
           pokeID = data.id;
           abilityURL = data.abilities;
@@ -4230,14 +4233,15 @@ export default function Home() {
             dispatch({ type: "evos/onEvos2", payload: "" });
         }
       }
-      console.log(evos);
-      console.log(evos2);
+      
     });
   };
 
   const stylePic = {
     backgroundImage: `url(${"https://www.transparenttextures.com/patterns/graphy.png"})`,
   };
+
+  
 
   return (
     <div
@@ -4250,19 +4254,15 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <div id="divContainer" >
-        <div className="card text-white bg-danger">
-          {legend && (
+        <div className="card text-white bg-danger" >
+          {legend ? (
             <button
               onClick={legendHide}
               className="card-header"
               style={{ border: "none" }}
             >
               <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  width: "96.4vw",
-                }}
+               
               >
                 <button
                   className="btn btn-sm"
@@ -4481,14 +4481,15 @@ export default function Home() {
                 </button>
               </div>
             </button>
-          )}
+          ) : 
+          <div></div> }
         </div>
         <div className="col">
           <div className="container text-center" style={{marginTop: "5vh"}}>
             <div className="row">
               <div className="col">
                 {species ? (
-                  <div id="picDescContainer1">
+                  <div id="picDescContainer1" style={{minWidth:"400px"}}>
                     <div className="card text-bg-danger mb-3 ">
                       <div
                         className="card-header"
@@ -4625,7 +4626,7 @@ export default function Home() {
                   <div></div>
                 )}
               </div>
-              <div className="col bg-danger" >
+              <div className="col bg-danger" style={{minWidth:"400px"}}>
                 <form id="my-form" onSubmit={searchPokemon}>
                   <div
                     id="search"
@@ -4633,6 +4634,7 @@ export default function Home() {
                   >
                     <input
                       id="searchPoke"
+                      style={{minWidth:"350px", maxWidth:"350px"}}
                       type="text"
                       className="form-control"
                       placeholder="Type in a pokemon"
@@ -4658,7 +4660,7 @@ export default function Home() {
                     </div>
                   </div>
                 </form>
-                <div style={{ display: "flex", justifyContent: "center" }}>
+                <div style={{ display: "flex", justifyContent: "center", minWidth:"400px" }}>
                   {!legend  ? (
                     <button
                       className="card bg-danger"
@@ -4694,10 +4696,10 @@ export default function Home() {
                 </div>
                 {!species && 
                 <div>
-                <div className="card" >
+                <div className="card" style={{width: "auto"}}>
   <img  className="card-img-top" src="images/appLogo.jpg" alt="logo" />
   <div className="card-img-overlay" style={{display:"flex", alignItems:"center", justifyContent: "center"}}>
-    <h3 className="card-title" >Welcome to Next.js Pokédex! Start by typing in a Pokémon.</h3>
+    <div id="welcomeText"className="card-title" style={{fontSize: "26px"}}>Welcome to Next.js Pokédex! Start by typing in a Pokémon.</div>
     
   </div>
 </div>
@@ -4770,7 +4772,7 @@ export default function Home() {
                           fontSize: "45px",
                         }}
                       >
-                        <button
+                       { sidebar ? <button
                           form="my-form"
                           type="submit"
                           onClick={getEvos}
@@ -4778,21 +4780,21 @@ export default function Home() {
                           style={{ fontSize: "45px" }}
                         >
                           <i className="fa-solid fa-chevron-left"></i>
-                        </button>
+                        </button> : <div></div>}
                         <img
                           className="card-img-top"
                           src={pic}
                           alt="Card image cap"
                         />
-                        <button
+                       { sidebar? <button
                           form="my-form"
                           type="submit"
                           onClick={getEvos2}
-                          className="btn-danger btn-lg"
+                          className="btn-danger btn-lg hidden-md hidden-xs"
                           style={{ fontSize: "45px" }}
                         >
                           <i className="fa-solid fa-chevron-right"></i>
-                        </button>
+                        </button> : <div></div>}
                       </div>
                       <div className="card-body">
                         <h4 id="desc" className="card-text">
@@ -4807,7 +4809,7 @@ export default function Home() {
               </div>
               <div className="col">
                 {species && abilities && abilitiesDesciption ? (
-                  <div id="picDescContainer1">
+                  <div id="picDescContainer1" style={{minWidth:"420px"}}>
                     <div className="card text-bg-danger mb-3 ">
                       <div className="card-header">
                         <nav>

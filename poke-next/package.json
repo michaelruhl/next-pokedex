@@ -23,7 +23,8 @@
     "react-dom": "18.2.0",
     "react-popper": "^2.3.0",
     "react-redux": "^8.0.4",
-    "react-speech-kit": "^3.0.1"
+    "react-speech-kit": "^3.0.1",
+    "use-match-media-hook": "^1.0.0"
   },
   "devDependencies": {
     "eslint": "8.23.1",
