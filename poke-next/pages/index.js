@@ -976,7 +976,7 @@ export default function Home() {
     } else {setSidebar(true)}
     const speechHandler = (msg) => {
       msg.text = pokemonName + "..." + "a" + type + "pokemon..." + species;
-      msg.pitch = 2;
+      msg.pitch = 1;
       msg.rate = 1.5;
       if (!speech) {
         msg.volume = 0;
@@ -994,7 +994,7 @@ export default function Home() {
   const speakPokemon = () => {
     const msg = new SpeechSynthesisUtterance();
     msg.text = (body.name.charAt(0).toUpperCase() + body.name.slice(1)) + "..." + "a" + type + "pokemon..." + species;
-    msg.pitch = 2;
+    msg.pitch = 1;
       msg.rate = 1.5;
     if (!speech) {
       msg.volume = 0;
